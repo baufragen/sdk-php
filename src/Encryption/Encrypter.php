@@ -10,11 +10,25 @@ class Encrypter {
     protected $secret = null;
     protected $cipher = 'aes-256-cbc';
 
+    /**
+     *
+     * @param string $secret  Your personal Baufragen.de API secret
+     * @param string $cipher  The cipher to use for encryption. Currently only AES 256 CBC is supported.
+     */
     public function __construct($secret, $cipher = 'aes-256-cbc') {
         $this->secret = $secret;
         $this->cipher = $cipher;
     }
 
+    /**
+     * This method takes a string and encrypts it using your API secret.
+     * You get a base64 encoded string back that's safe to use in URLs and can be passed
+     * to the Baufragen.de API.
+     *
+     * @param string $value The value you want to have encrypted
+     * @return string The encrypted value
+     * @throws EncryptionException
+     */
     public function encryptString($value) {
         // generate an input vector depending on the used cipher
         $iv = random_bytes(openssl_cipher_iv_length($this->cipher));
@@ -42,6 +56,14 @@ class Encrypter {
         return base64_encode($json);
     }
 
+    /**
+     * This method decrypts the given value and returns the original.
+     * You can use it to decrypt values from the Baufragen.de API easily.
+     *
+     * @param string $value The value you got from our API and want to decrypt.
+     * @return string The original decrypted value
+     * @throws DecryptionException
+     */
     public function decryptString($value) {
         // decode the value
         $payload = json_decode(base64_decode($value), true);
@@ -65,6 +87,13 @@ class Encrypter {
         return $decrypted;
     }
 
+    /**
+     * Checks after base64_decoding and json_decoding if the value is valid or if something
+     * wrong was passed.
+     *
+     * @param array $payload    The array that needs to be checked for validity
+     * @return bool             Returns true if the values are valid, otherwise false
+     */
     protected function validPayload($payload) {
         return is_array($payload) && isset($payload['iv'], $payload['value']);
     }
